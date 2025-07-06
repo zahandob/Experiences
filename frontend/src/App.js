@@ -114,81 +114,100 @@ function App() {
     }
   };
 
-  // Profile form component
-  const ProfileForm = () => (
-    <div className="profile-form-container">
-      <div className="profile-form-card">
-        <h1 className="form-title">Discover Your Next Adventure</h1>
-        <p className="form-subtitle">Tell us about yourself and we'll suggest amazing experiences you never knew you'd love!</p>
-        
-        <form onSubmit={handleProfileSubmit} className="profile-form">
-          <div className="form-group">
-            <label htmlFor="age">Age</label>
-            <input
-              type="number"
-              id="age"
-              value={userProfile.age}
-              onChange={(e) => setUserProfile({...userProfile, age: e.target.value})}
-              placeholder="Enter your age"
-              required
-            />
-          </div>
+  // Profile form component with proper focus handling
+  const ProfileForm = () => {
+    const handleInputChange = (field, value) => {
+      setUserProfile(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    };
 
-          <div className="form-group">
-            <label htmlFor="work_group">Work Group/Industry</label>
-            <input
-              type="text"
-              id="work_group"
-              value={userProfile.work_group}
-              onChange={(e) => setUserProfile({...userProfile, work_group: e.target.value})}
-              placeholder="e.g., Technology, Finance, Healthcare"
-              required
-            />
-          </div>
+    return (
+      <div className="profile-form-container">
+        <div className="profile-form-card">
+          <h1 className="form-title">Discover Your Next Adventure</h1>
+          <p className="form-subtitle">Tell us about yourself and we'll suggest amazing experiences you never knew you'd love!</p>
+          
+          <form onSubmit={handleProfileSubmit} className="profile-form">
+            <div className="form-group">
+              <label htmlFor="age">Age</label>
+              <input
+                type="number"
+                id="age"
+                name="age"
+                value={userProfile.age}
+                onChange={(e) => handleInputChange('age', e.target.value)}
+                placeholder="Enter your age"
+                required
+                autoComplete="off"
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="work_role">Work Role</label>
-            <input
-              type="text"
-              id="work_role"
-              value={userProfile.work_role}
-              onChange={(e) => setUserProfile({...userProfile, work_role: e.target.value})}
-              placeholder="e.g., Software Engineer, Product Manager"
-              required
-            />
-          </div>
+            <div className="form-group">
+              <label htmlFor="work_group">Work Group/Industry</label>
+              <input
+                type="text"
+                id="work_group"
+                name="work_group"
+                value={userProfile.work_group}
+                onChange={(e) => handleInputChange('work_group', e.target.value)}
+                placeholder="e.g., Technology, Finance, Healthcare"
+                required
+                autoComplete="off"
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="work_resume">Work Experience Summary</label>
-            <textarea
-              id="work_resume"
-              value={userProfile.work_resume}
-              onChange={(e) => setUserProfile({...userProfile, work_resume: e.target.value})}
-              placeholder="Brief summary of your work experience and achievements"
-              rows="4"
-              required
-            />
-          </div>
+            <div className="form-group">
+              <label htmlFor="work_role">Work Role</label>
+              <input
+                type="text"
+                id="work_role"
+                name="work_role"
+                value={userProfile.work_role}
+                onChange={(e) => handleInputChange('work_role', e.target.value)}
+                placeholder="e.g., Software Engineer, Product Manager"
+                required
+                autoComplete="off"
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="hobbies_interests">Hobbies & Interests</label>
-            <textarea
-              id="hobbies_interests"
-              value={userProfile.hobbies_interests}
-              onChange={(e) => setUserProfile({...userProfile, hobbies_interests: e.target.value})}
-              placeholder="What do you enjoy doing in your free time?"
-              rows="3"
-              required
-            />
-          </div>
+            <div className="form-group">
+              <label htmlFor="work_resume">Work Experience Summary</label>
+              <textarea
+                id="work_resume"
+                name="work_resume"
+                value={userProfile.work_resume}
+                onChange={(e) => handleInputChange('work_resume', e.target.value)}
+                placeholder="Brief summary of your work experience and achievements"
+                rows="4"
+                required
+                autoComplete="off"
+              />
+            </div>
 
-          <button type="submit" className="submit-btn" disabled={loading}>
-            {loading ? 'Creating Profile...' : 'Discover Experiences'}
-          </button>
-        </form>
+            <div className="form-group">
+              <label htmlFor="hobbies_interests">Hobbies & Interests</label>
+              <textarea
+                id="hobbies_interests"
+                name="hobbies_interests"
+                value={userProfile.hobbies_interests}
+                onChange={(e) => handleInputChange('hobbies_interests', e.target.value)}
+                placeholder="What do you enjoy doing in your free time?"
+                rows="3"
+                required
+                autoComplete="off"
+              />
+            </div>
+
+            <button type="submit" className="submit-btn" disabled={loading}>
+              {loading ? 'Creating Profile...' : 'Discover Experiences'}
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Recommendation card component
   const RecommendationCard = ({ recommendation }) => (
