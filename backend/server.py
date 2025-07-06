@@ -36,10 +36,16 @@ print(f"OpenAI API Key starts with: {openai.api_key[:20] if openai.api_key else 
 # Pydantic models
 class UserProfile(BaseModel):
     age: int
-    work_group: str
-    work_role: str
-    work_resume: str
-    hobbies_interests: str
+    industry_sector: str
+    current_role: str
+    technical_stack: str
+    career_trajectory: str
+    educational_background: str
+    leadership_experience: str = ""
+    external_activities: str = ""
+    investment_financial: str = ""
+    serious_hobbies: str
+    network_connections: str = ""
 
 class ExperienceRecommendation(BaseModel):
     id: str
