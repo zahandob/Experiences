@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -17,6 +17,14 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [cardIndex, setCardIndex] = useState(0);
   const [likedExperiences, setLikedExperiences] = useState([]);
+
+  // Memoized input change handler to prevent re-renders
+  const handleInputChange = useCallback((field, value) => {
+    setUserProfile(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  }, []);
 
   // Handle profile form submission
   const handleProfileSubmit = async (e) => {
@@ -100,12 +108,12 @@ function App() {
 
       // Add to liked experiences if user liked it
       if (action === 'liked') {
-        setLikedExperiences([...likedExperiences, currentRecommendation]);
+        setLikedExperiences(prev => [...prev, currentRecommendation]);
       }
 
       // Load next recommendation
       await loadNextRecommendation();
-      setCardIndex(cardIndex + 1);
+      setCardIndex(prev => prev + 1);
       
     } catch (error) {
       console.error('Error recording interaction:', error);
@@ -116,13 +124,6 @@ function App() {
 
   // Profile form component with proper focus handling
   const ProfileForm = () => {
-    const handleInputChange = (field, value) => {
-      setUserProfile(prev => ({
-        ...prev,
-        [field]: value
-      }));
-    };
-
     return (
       <div className="profile-form-container">
         <div className="profile-form-card">
