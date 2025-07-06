@@ -123,13 +123,14 @@ def get_ai_recommendations(user_profile: dict, similar_profiles: List[dict], sho
     """Use OpenAI to generate experience recommendations based on profile similarity analysis."""
     
     if not openai.api_key:
-        print("OpenAI API key not found, using fallback recommendations")
-        return generate_fallback_recommendations(shown_ids)
+        print("OpenAI API key not found, cannot generate recommendations")
+        return []
     
     # Filter out already shown experiences
     available_experiences = [exp for exp in mock_experiences if exp['id'] not in shown_ids]
     
     if not available_experiences:
+        print("No more available experiences to recommend")
         return []
     
     # Prepare the new sophisticated prompt
@@ -140,10 +141,16 @@ Your goal is to create an experience profile so detailed it can be mapped agains
 
 **USER PROFILE:**
 Age: {user_profile.get('age')}
-Work Group: {user_profile.get('work_group')}
-Work Role: {user_profile.get('work_role')}
-Work Resume: {user_profile.get('work_resume')}
-Hobbies & Interests: {user_profile.get('hobbies_interests')}
+Industry Sector: {user_profile.get('industry_sector')}
+Current Role: {user_profile.get('current_role')}
+Technical Stack: {user_profile.get('technical_stack')}
+Career Trajectory: {user_profile.get('career_trajectory')}
+Educational Background: {user_profile.get('educational_background')}
+Leadership Experience: {user_profile.get('leadership_experience')}
+External Activities: {user_profile.get('external_activities')}
+Investment/Financial: {user_profile.get('investment_financial')}
+Serious Hobbies: {user_profile.get('serious_hobbies')}
+Network Connections: {user_profile.get('network_connections')}
 
 **PROCESS:**
 1. Analyze user's profile against individuals with similar experiences (Wikipedia, biographies, forums).
@@ -205,16 +212,16 @@ Use strict, directive language. No friendly tone. Focus on maximum discovery pot
                 print(f"Parsed recommendation: {recommendation}")
                 return [recommendation]  # Return as array for consistency
             else:
-                print("Could not find JSON object in response, using fallback")
-                return generate_fallback_recommendations(shown_ids)
+                print("Could not find JSON object in AI response")
+                return []
                 
         except json.JSONDecodeError as e:
-            print(f"JSON decode error: {e}, using fallback")
-            return generate_fallback_recommendations(shown_ids)
+            print(f"JSON decode error: {e}")
+            return []
             
     except Exception as e:
         print(f"OpenAI API Error: {str(e)}")
-        return generate_fallback_recommendations(shown_ids)
+        return []
 
 def generate_fallback_recommendations(shown_ids: List[str] = []):
     """Generate fallback recommendations when AI fails."""
