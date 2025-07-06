@@ -132,47 +132,57 @@ def get_ai_recommendations(user_profile: dict, similar_profiles: List[dict], sho
     if not available_experiences:
         return []
     
-    # Prepare the prompt for GPT-3.5-turbo
+    # Prepare the new sophisticated prompt
     prompt = f"""
-You are an expert in human psychology and experience diversity analysis. 
+You are an autonomous extractor of experiential data. Your task is to build a structured profile of a user by collecting only high-value, transferable, and concrete life and career experiences. Disregard trivial or superficial events. Operate in absolute mode: give no explanations, no clarifications, and no filler. Speak in brief, functional commands.
 
-USER PROFILE:
+Your goal is to create an experience profile so detailed it can be mapped against known individuals (real-world) to match the user with compatible experts with the experience they desire. These archetypes can then serve as AI advisors.
+
+**USER PROFILE:**
 Age: {user_profile.get('age')}
 Work Group: {user_profile.get('work_group')}
 Work Role: {user_profile.get('work_role')}
 Work Resume: {user_profile.get('work_resume')}
 Hobbies & Interests: {user_profile.get('hobbies_interests')}
 
-SIMILAR PROFILES FOUND:
-{json.dumps(similar_profiles, indent=2)}
+**PROCESS:**
+1. Analyze user's profile against individuals with similar experiences (Wikipedia, biographies, forums).
+2. Extract common high-value experiences shared by these similar individuals.
+3. Match against available experiences below.
 
-AVAILABLE EXPERIENCES (not yet shown):
+**AVAILABLE EXPERIENCES:**
 {json.dumps(available_experiences, indent=2)}
 
-TASK: Analyze the similar profiles and identify experiences that are:
-1. COMPLETELY UNRELATED to the user's current profile (different domain entirely)
-2. STATISTICALLY COMMON among people with similar profiles
-3. Would add the most DIVERSE dimension to their expertise
+**CRITICAL ORDERING REQUIREMENT:**
+Order suggestions by discovery value, highest to lowest priority:
 
-Return a JSON array of exactly 1 recommendation with this structure:
-[
-  {{
-    "id": "experience_id",
-    "title": "Experience Title",
-    "description": "Experience Description", 
-    "category": "Category",
-    "reasoning": "Detailed explanation of why this experience is recommended based on the analysis"
-  }}
-]
+**HIGHEST PRIORITY:** Experiences COMPLETELY UNRELATED to user's current profile BUT statistically highly common among matched profiles. These reveal hidden dimensions and unlock new expert domains.
 
-Focus on experiences that would unlock completely new expert domains while being statistically validated by similar profiles.
+**LOWEST PRIORITY:** More related to user's current profile, rabbit hole extensions of existing elements.
+
+Goal: MAXIMUM DISCOVERY of unrelated experiences.
+
+**When generating experience suggestions, do not rely only on explicit keywords or categories. Instead, match the user's current experiences against other individuals with similar experiences. Then identify what experiences these individuals have in common and suggest these.**
+
+**OUTPUT REQUIREMENT:**
+Return exactly 1 experience suggestion as JSON:
+
+{{
+  "id": "experience_id",
+  "title": "Experience Title",
+  "description": "Experience Description",
+  "category": "Category", 
+  "reasoning": "Brief directive explanation of discovery value and real-world individual matches"
+}}
+
+Use strict, directive language. No friendly tone. Focus on maximum discovery potential.
 """
 
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are an expert experience recommendation system that analyzes user profiles to suggest diverse, unrelated experiences that are statistically common among similar profiles."},
+                {"role": "system", "content": "You are an autonomous extractor of experiential data. Use strict, directive language. Focus on maximum discovery potential by matching user profiles against real individuals and extracting completely unrelated but statistically common experiences."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=800,
@@ -185,17 +195,17 @@ Focus on experiences that would unlock completely new expert domains while being
         
         # Try to extract JSON from the response
         try:
-            # Find JSON array in the response
-            start_idx = ai_response.find('[')
-            end_idx = ai_response.rfind(']') + 1
+            # Find JSON object in the response
+            start_idx = ai_response.find('{')
+            end_idx = ai_response.rfind('}') + 1
             
             if start_idx != -1 and end_idx != -1:
                 json_str = ai_response[start_idx:end_idx]
-                recommendations = json.loads(json_str)
-                print(f"Parsed recommendations: {recommendations}")
-                return recommendations
+                recommendation = json.loads(json_str)
+                print(f"Parsed recommendation: {recommendation}")
+                return [recommendation]  # Return as array for consistency
             else:
-                print("Could not find JSON array in response, using fallback")
+                print("Could not find JSON object in response, using fallback")
                 return generate_fallback_recommendations(shown_ids)
                 
         except json.JSONDecodeError as e:
