@@ -310,7 +310,16 @@ function App() {
 
   return (
     <div className="App">
-      {currentStep === 'profile' ? <ProfileForm /> : <RecommendationsView />}
+      {currentStep === 'profile' ? (
+        <ProfileForm 
+          userProfile={userProfile}
+          onInputChange={handleInputChange}
+          onSubmit={handleProfileSubmit}
+          loading={loading}
+        />
+      ) : (
+        <RecommendationsView />
+      )}
     </div>
   );
 }
