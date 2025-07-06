@@ -234,32 +234,38 @@ def generate_fallback_recommendations(shown_ids: List[str] = []):
     return []
 
 def find_similar_profiles(user_profile: dict) -> List[dict]:
-    """Find profiles similar to the user's profile using simple matching."""
+    """Find profiles similar to the user's profile using enhanced matching."""
     similar_profiles = []
     
     for profile in mock_profiles:
         similarity_score = 0
         
-        # Check work group similarity
-        if profile['work_group'].lower() == user_profile.get('work_group', '').lower():
+        # Check industry sector similarity
+        if profile.get('industry_sector', '').lower() == user_profile.get('industry_sector', '').lower():
+            similarity_score += 4
+            
+        # Check role level similarity
+        user_role = user_profile.get('current_role', '').lower()
+        profile_role = profile.get('current_role', '').lower()
+        if any(word in profile_role for word in user_role.split()):
             similarity_score += 3
             
         # Check age similarity (within 5 years)
-        age_diff = abs(profile['age'] - user_profile.get('age', 0))
+        age_diff = abs(profile.get('age', 0) - user_profile.get('age', 0))
         if age_diff <= 5:
             similarity_score += 2
             
-        # Check work role similarity (contains similar keywords)
-        user_role = user_profile.get('work_role', '').lower()
-        profile_role = profile['work_role'].lower()
-        if any(word in profile_role for word in user_role.split()):
+        # Check technical/educational background similarity
+        user_tech = user_profile.get('technical_stack', '').lower()
+        profile_tech = profile.get('technical_stack', '').lower()
+        if any(word in profile_tech for word in user_tech.split() if len(word) > 2):
             similarity_score += 2
             
         # Add profile if similarity score is high enough
-        if similarity_score >= 3:
+        if similarity_score >= 4:
             similar_profiles.append(profile)
     
-    return similar_profiles[:3]  # Return top 3 similar profiles
+    return similar_profiles[:5]  # Return top 5 similar profiles
 
 @app.post("/api/profile")
 async def create_profile(profile: UserProfile):
