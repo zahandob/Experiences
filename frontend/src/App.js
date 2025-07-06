@@ -8,8 +8,8 @@ const ProfileForm = React.memo(({ userProfile, onInputChange, onSubmit, loading 
   return (
     <div className="profile-form-container">
       <div className="profile-form-card">
-        <h1 className="form-title">Discover Your Next Adventure</h1>
-        <p className="form-subtitle">Tell us about yourself and we'll suggest amazing experiences you never knew you'd love!</p>
+        <h1 className="form-title">Experience Profile Extraction</h1>
+        <p className="form-subtitle">Provide detailed technical and professional data for precise archetype matching against expert individuals.</p>
         
         <form onSubmit={onSubmit} className="profile-form">
           <div className="form-group">
@@ -27,41 +27,55 @@ const ProfileForm = React.memo(({ userProfile, onInputChange, onSubmit, loading 
           </div>
 
           <div className="form-group">
-            <label htmlFor="work_group">Work Group/Industry</label>
+            <label htmlFor="industry_sector">Industry Sector</label>
             <input
               type="text"
-              id="work_group"
-              name="work_group"
-              value={userProfile.work_group}
-              onChange={(e) => onInputChange('work_group', e.target.value)}
-              placeholder="e.g., Technology, Finance, Healthcare"
+              id="industry_sector"
+              name="industry_sector"
+              value={userProfile.industry_sector}
+              onChange={(e) => onInputChange('industry_sector', e.target.value)}
+              placeholder="e.g., SaaS, FinTech, Biotech, Manufacturing, Consulting"
               required
               autoComplete="off"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="work_role">Work Role</label>
+            <label htmlFor="current_role">Current Role & Level</label>
             <input
               type="text"
-              id="work_role"
-              name="work_role"
-              value={userProfile.work_role}
-              onChange={(e) => onInputChange('work_role', e.target.value)}
-              placeholder="e.g., Software Engineer, Product Manager"
+              id="current_role"
+              name="current_role"
+              value={userProfile.current_role}
+              onChange={(e) => onInputChange('current_role', e.target.value)}
+              placeholder="e.g., Senior Software Engineer, VP Product, Managing Director"
               required
               autoComplete="off"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="work_resume">Work Experience Summary</label>
+            <label htmlFor="technical_stack">Technical Stack / Core Skills</label>
             <textarea
-              id="work_resume"
-              name="work_resume"
-              value={userProfile.work_resume}
-              onChange={(e) => onInputChange('work_resume', e.target.value)}
-              placeholder="Brief summary of your work experience and achievements"
+              id="technical_stack"
+              name="technical_stack"
+              value={userProfile.technical_stack}
+              onChange={(e) => onInputChange('technical_stack', e.target.value)}
+              placeholder="List specific technologies, methodologies, frameworks, tools you work with regularly"
+              rows="3"
+              required
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="career_trajectory">Career Trajectory & Key Achievements</label>
+            <textarea
+              id="career_trajectory"
+              name="career_trajectory"
+              value={userProfile.career_trajectory}
+              onChange={(e) => onInputChange('career_trajectory', e.target.value)}
+              placeholder="Timeline of roles, promotions, major projects, quantified achievements, company stages (startup to enterprise)"
               rows="4"
               required
               autoComplete="off"
@@ -69,21 +83,86 @@ const ProfileForm = React.memo(({ userProfile, onInputChange, onSubmit, loading 
           </div>
 
           <div className="form-group">
-            <label htmlFor="hobbies_interests">Hobbies & Interests</label>
+            <label htmlFor="educational_background">Educational & Certification Background</label>
             <textarea
-              id="hobbies_interests"
-              name="hobbies_interests"
-              value={userProfile.hobbies_interests}
-              onChange={(e) => onInputChange('hobbies_interests', e.target.value)}
-              placeholder="What do you enjoy doing in your free time?"
+              id="educational_background"
+              name="educational_background"
+              value={userProfile.educational_background}
+              onChange={(e) => onInputChange('educational_background', e.target.value)}
+              placeholder="Degrees, institutions, certifications, specialized training programs, self-taught domains"
               rows="3"
               required
               autoComplete="off"
             />
           </div>
 
+          <div className="form-group">
+            <label htmlFor="leadership_experience">Leadership & Management Experience</label>
+            <textarea
+              id="leadership_experience"
+              name="leadership_experience"
+              value={userProfile.leadership_experience}
+              onChange={(e) => onInputChange('leadership_experience', e.target.value)}
+              placeholder="Team sizes managed, P&L responsibility, cross-functional leadership, mentoring, board interactions"
+              rows="3"
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="external_activities">External Professional Activities</label>
+            <textarea
+              id="external_activities"
+              name="external_activities"
+              value={userProfile.external_activities}
+              onChange={(e) => onInputChange('external_activities', e.target.value)}
+              placeholder="Speaking engagements, publications, advisory roles, board positions, open source contributions, patents"
+              rows="3"
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="investment_financial">Investment & Financial Activities</label>
+            <textarea
+              id="investment_financial"
+              name="investment_financial"
+              value={userProfile.investment_financial}
+              onChange={(e) => onInputChange('investment_financial', e.target.value)}
+              placeholder="Angel investing, trading, real estate, business ownership, financial instruments experience"
+              rows="2"
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="serious_hobbies">Serious Hobbies & Skill Development</label>
+            <textarea
+              id="serious_hobbies"
+              name="serious_hobbies"
+              value={userProfile.serious_hobbies}
+              onChange={(e) => onInputChange('serious_hobbies', e.target.value)}
+              placeholder="High-skill hobbies requiring significant time investment, competitive activities, artistic pursuits, physical challenges"
+              rows="3"
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="network_connections">Professional Network & Connections</label>
+            <textarea
+              id="network_connections"
+              name="network_connections"
+              value={userProfile.network_connections}
+              onChange={(e) => onInputChange('network_connections', e.target.value)}
+              placeholder="Industry connections, alumni networks, professional associations, mentors, notable collaborations"
+              rows="2"
+              autoComplete="off"
+            />
+          </div>
+
           <button type="submit" className="submit-btn" disabled={loading}>
-            {loading ? 'Creating Profile...' : 'Discover Experiences'}
+            {loading ? 'Processing Profile...' : 'Extract Experience Archetypes'}
           </button>
         </form>
       </div>
