@@ -368,10 +368,16 @@ function App() {
                 setCurrentStep('profile');
                 setUserProfile({
                   age: '',
-                  work_group: '',
-                  work_role: '',
-                  work_resume: '',
-                  hobbies_interests: ''
+                  industry_sector: '',
+                  current_role: '',
+                  technical_stack: '',
+                  career_trajectory: '',
+                  educational_background: '',
+                  leadership_experience: '',
+                  external_activities: '',
+                  investment_financial: '',
+                  serious_hobbies: '',
+                  network_connections: ''
                 });
                 setLikedExperiences([]);
                 setCardIndex(0);
