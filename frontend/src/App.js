@@ -1,52 +1,296 @@
-import { useEffect } from "react";
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import './App.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
-const Home = () => {
-  const helloWorldApi = async () => {
+function App() {
+  const [currentStep, setCurrentStep] = useState('profile'); // 'profile', 'recommendations'
+  const [userProfile, setUserProfile] = useState({
+    age: '',
+    work_group: '',
+    work_role: '',
+    work_resume: '',
+    hobbies_interests: ''
+  });
+  const [currentRecommendation, setCurrentRecommendation] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [cardIndex, setCardIndex] = useState(0);
+  const [likedExperiences, setLikedExperiences] = useState([]);
+
+  // Handle profile form submission
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
     try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
+      const response = await fetch(`${BACKEND_URL}/api/profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          age: parseInt(userProfile.age),
+          work_group: userProfile.work_group,
+          work_role: userProfile.work_role,
+          work_resume: userProfile.work_resume,
+          hobbies_interests: userProfile.hobbies_interests
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserId(data.user_id);
+        setCurrentStep('recommendations');
+        loadNextRecommendation(data.user_id);
+      } else {
+        console.error('Failed to create profile');
+      }
+    } catch (error) {
+      console.error('Error creating profile:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+  // Load next recommendation
+  const loadNextRecommendation = async (userIdToUse = userId) => {
+    setLoading(true);
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/next-recommendation/${userIdToUse}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.message) {
+          // No more recommendations
+          setCurrentRecommendation(null);
+        } else {
+          setCurrentRecommendation(data);
+        }
+      } else {
+        console.error('Failed to load recommendation');
+      }
+    } catch (error) {
+      console.error('Error loading recommendation:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+  // Handle card swipe/action
+  const handleCardAction = async (action) => {
+    if (!currentRecommendation) return;
+
+    setLoading(true);
+    
+    try {
+      // Record interaction
+      await fetch(`${BACKEND_URL}/api/interaction`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          experience_id: currentRecommendation.id,
+          action: action
+        }),
+      });
+
+      // Add to liked experiences if user liked it
+      if (action === 'liked') {
+        setLikedExperiences([...likedExperiences, currentRecommendation]);
+      }
+
+      // Load next recommendation
+      await loadNextRecommendation();
+      setCardIndex(cardIndex + 1);
+      
+    } catch (error) {
+      console.error('Error recording interaction:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Profile form component
+  const ProfileForm = () => (
+    <div className="profile-form-container">
+      <div className="profile-form-card">
+        <h1 className="form-title">Discover Your Next Adventure</h1>
+        <p className="form-subtitle">Tell us about yourself and we'll suggest amazing experiences you never knew you'd love!</p>
+        
+        <form onSubmit={handleProfileSubmit} className="profile-form">
+          <div className="form-group">
+            <label htmlFor="age">Age</label>
+            <input
+              type="number"
+              id="age"
+              value={userProfile.age}
+              onChange={(e) => setUserProfile({...userProfile, age: e.target.value})}
+              placeholder="Enter your age"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="work_group">Work Group/Industry</label>
+            <input
+              type="text"
+              id="work_group"
+              value={userProfile.work_group}
+              onChange={(e) => setUserProfile({...userProfile, work_group: e.target.value})}
+              placeholder="e.g., Technology, Finance, Healthcare"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="work_role">Work Role</label>
+            <input
+              type="text"
+              id="work_role"
+              value={userProfile.work_role}
+              onChange={(e) => setUserProfile({...userProfile, work_role: e.target.value})}
+              placeholder="e.g., Software Engineer, Product Manager"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="work_resume">Work Experience Summary</label>
+            <textarea
+              id="work_resume"
+              value={userProfile.work_resume}
+              onChange={(e) => setUserProfile({...userProfile, work_resume: e.target.value})}
+              placeholder="Brief summary of your work experience and achievements"
+              rows="4"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="hobbies_interests">Hobbies & Interests</label>
+            <textarea
+              id="hobbies_interests"
+              value={userProfile.hobbies_interests}
+              onChange={(e) => setUserProfile({...userProfile, hobbies_interests: e.target.value})}
+              placeholder="What do you enjoy doing in your free time?"
+              rows="3"
+              required
+            />
+          </div>
+
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? 'Creating Profile...' : 'Discover Experiences'}
+          </button>
+        </form>
+      </div>
     </div>
   );
-};
 
-function App() {
+  // Recommendation card component
+  const RecommendationCard = ({ recommendation }) => (
+    <div className="recommendation-card">
+      <div className="card-header">
+        <h2 className="card-title">{recommendation.title}</h2>
+        <span className="card-category">{recommendation.category}</span>
+      </div>
+      
+      <div className="card-content">
+        <p className="card-description">{recommendation.description}</p>
+        
+        <div className="card-reasoning">
+          <h3>Why This Experience?</h3>
+          <p>{recommendation.reasoning}</p>
+        </div>
+      </div>
+      
+      <div className="card-actions">
+        <button 
+          className="dislike-btn"
+          onClick={() => handleCardAction('disliked')}
+          disabled={loading}
+        >
+          ❌ Not for me
+        </button>
+        <button 
+          className="like-btn"
+          onClick={() => handleCardAction('liked')}
+          disabled={loading}
+        >
+          ✅ I'm interested!
+        </button>
+      </div>
+    </div>
+  );
+
+  // Recommendations view
+  const RecommendationsView = () => (
+    <div className="recommendations-container">
+      <div className="recommendations-header">
+        <h1>Your Experience Recommendations</h1>
+        <p>Swipe through suggestions tailored just for you!</p>
+        {likedExperiences.length > 0 && (
+          <div className="liked-count">
+            💖 {likedExperiences.length} experiences you're interested in
+          </div>
+        )}
+      </div>
+
+      <div className="cards-container">
+        {loading ? (
+          <div className="loading-card">
+            <div className="spinner"></div>
+            <p>Finding your next adventure...</p>
+          </div>
+        ) : currentRecommendation ? (
+          <RecommendationCard recommendation={currentRecommendation} />
+        ) : (
+          <div className="end-card">
+            <h2>🎉 You've explored all recommendations!</h2>
+            <p>Great job! You've discovered {likedExperiences.length} new experiences to try.</p>
+            <button 
+              className="restart-btn"
+              onClick={() => {
+                setCurrentStep('profile');
+                setUserProfile({
+                  age: '',
+                  work_group: '',
+                  work_role: '',
+                  work_resume: '',
+                  hobbies_interests: ''
+                });
+                setLikedExperiences([]);
+                setCardIndex(0);
+              }}
+            >
+              Start New Session
+            </button>
+          </div>
+        )}
+      </div>
+
+      {likedExperiences.length > 0 && (
+        <div className="liked-experiences">
+          <h3>Your Interested Experiences</h3>
+          <div className="liked-list">
+            {likedExperiences.map((exp, index) => (
+              <div key={index} className="liked-item">
+                <span className="liked-title">{exp.title}</span>
+                <span className="liked-category">{exp.category}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      {currentStep === 'profile' ? <ProfileForm /> : <RecommendationsView />}
     </div>
   );
 }
