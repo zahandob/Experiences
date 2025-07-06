@@ -174,10 +174,16 @@ function App() {
   const [currentStep, setCurrentStep] = useState('profile'); // 'profile', 'recommendations'
   const [userProfile, setUserProfile] = useState({
     age: '',
-    work_group: '',
-    work_role: '',
-    work_resume: '',
-    hobbies_interests: ''
+    industry_sector: '',
+    current_role: '',
+    technical_stack: '',
+    career_trajectory: '',
+    educational_background: '',
+    leadership_experience: '',
+    external_activities: '',
+    investment_financial: '',
+    serious_hobbies: '',
+    network_connections: ''
   });
   const [currentRecommendation, setCurrentRecommendation] = useState(null);
   const [userId, setUserId] = useState(null);
