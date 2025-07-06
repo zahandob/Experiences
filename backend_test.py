@@ -111,6 +111,21 @@ class ExperienceRecommenderTester:
             if 'title' in response:
                 print(f"Next recommendation: {response['title']}")
                 self.recommendation_id = response.get('id')
+                
+                # Check if this is an AI-generated recommendation (should have reasoning)
+                if 'reasoning' in response:
+                    print(f"✅ AI reasoning provided: {response['reasoning'][:100]}...")
+                else:
+                    print("❌ No AI reasoning found in recommendation")
+                
+                # Check for diversity (not seen before)
+                is_duplicate = response['title'] in self.seen_recommendations
+                if is_duplicate:
+                    print(f"❌ Duplicate recommendation: {response['title']}")
+                else:
+                    print(f"✅ New unique recommendation: {response['title']}")
+                    self.seen_recommendations.append(response['title'])
+                
                 return True
             else:
                 print("❌ No next recommendation returned or invalid format")
