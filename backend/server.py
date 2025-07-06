@@ -230,53 +230,8 @@ Use strict, directive language. No friendly tone. Focus on maximum discovery pot
         return []
 
 def generate_fallback_recommendations(shown_ids: List[str] = []):
-    """Generate fallback recommendations when AI fails."""
-    
-    fallback_recommendations = [
-        {
-            "id": "exp1",
-            "title": "Pottery Making",
-            "description": "Learn the ancient art of pottery",
-            "category": "Arts & Crafts",
-            "reasoning": "Based on statistical analysis, people with similar profiles often explore creative outlets that use their hands in completely different ways."
-        },
-        {
-            "id": "exp4", 
-            "title": "Stand-up Comedy",
-            "description": "Develop your comedic timing and stage presence",
-            "category": "Performance",
-            "reasoning": "Analytical minds often excel at observational humor and structured storytelling, providing a completely different creative outlet."
-        },
-        {
-            "id": "exp6",
-            "title": "Mushroom Foraging",
-            "description": "Learn to identify and harvest wild mushrooms safely",
-            "category": "Nature",
-            "reasoning": "Detail-oriented professionals often find satisfaction in the methodical nature of foraging while connecting with nature."
-        },
-        {
-            "id": "exp2",
-            "title": "Salsa Dancing",
-            "description": "Master the passionate dance of salsa",
-            "category": "Dance",
-            "reasoning": "Physical expression through dance provides a perfect counterbalance to analytical work."
-        },
-        {
-            "id": "exp3",
-            "title": "Beekeeping",
-            "description": "Understand the fascinating world of bees",
-            "category": "Agriculture",
-            "reasoning": "Working with nature and understanding complex systems appeals to methodical thinkers."
-        }
-    ]
-    
-    # Filter out already shown recommendations
-    available_fallbacks = [rec for rec in fallback_recommendations if rec['id'] not in shown_ids]
-    
-    if available_fallbacks:
-        return [available_fallbacks[0]]  # Return one recommendation
-    else:
-        return []
+    """This function has been removed - all recommendations now go through AI predictive process."""
+    return []
 
 def find_similar_profiles(user_profile: dict) -> List[dict]:
     """Find profiles similar to the user's profile using simple matching."""
