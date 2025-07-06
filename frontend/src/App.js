@@ -3,6 +3,94 @@ import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
+// Extract ProfileForm component outside to prevent re-renders
+const ProfileForm = React.memo(({ userProfile, onInputChange, onSubmit, loading }) => {
+  return (
+    <div className="profile-form-container">
+      <div className="profile-form-card">
+        <h1 className="form-title">Discover Your Next Adventure</h1>
+        <p className="form-subtitle">Tell us about yourself and we'll suggest amazing experiences you never knew you'd love!</p>
+        
+        <form onSubmit={onSubmit} className="profile-form">
+          <div className="form-group">
+            <label htmlFor="age">Age</label>
+            <input
+              type="number"
+              id="age"
+              name="age"
+              value={userProfile.age}
+              onChange={(e) => onInputChange('age', e.target.value)}
+              placeholder="Enter your age"
+              required
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="work_group">Work Group/Industry</label>
+            <input
+              type="text"
+              id="work_group"
+              name="work_group"
+              value={userProfile.work_group}
+              onChange={(e) => onInputChange('work_group', e.target.value)}
+              placeholder="e.g., Technology, Finance, Healthcare"
+              required
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="work_role">Work Role</label>
+            <input
+              type="text"
+              id="work_role"
+              name="work_role"
+              value={userProfile.work_role}
+              onChange={(e) => onInputChange('work_role', e.target.value)}
+              placeholder="e.g., Software Engineer, Product Manager"
+              required
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="work_resume">Work Experience Summary</label>
+            <textarea
+              id="work_resume"
+              name="work_resume"
+              value={userProfile.work_resume}
+              onChange={(e) => onInputChange('work_resume', e.target.value)}
+              placeholder="Brief summary of your work experience and achievements"
+              rows="4"
+              required
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="hobbies_interests">Hobbies & Interests</label>
+            <textarea
+              id="hobbies_interests"
+              name="hobbies_interests"
+              value={userProfile.hobbies_interests}
+              onChange={(e) => onInputChange('hobbies_interests', e.target.value)}
+              placeholder="What do you enjoy doing in your free time?"
+              rows="3"
+              required
+              autoComplete="off"
+            />
+          </div>
+
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? 'Creating Profile...' : 'Discover Experiences'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+});
+
 function App() {
   const [currentStep, setCurrentStep] = useState('profile'); // 'profile', 'recommendations'
   const [userProfile, setUserProfile] = useState({
@@ -18,7 +106,7 @@ function App() {
   const [cardIndex, setCardIndex] = useState(0);
   const [likedExperiences, setLikedExperiences] = useState([]);
 
-  // Memoized input change handler to prevent re-renders
+  // Stable input change handler
   const handleInputChange = useCallback((field, value) => {
     setUserProfile(prev => ({
       ...prev,
@@ -27,7 +115,7 @@ function App() {
   }, []);
 
   // Handle profile form submission
-  const handleProfileSubmit = async (e) => {
+  const handleProfileSubmit = useCallback(async (e) => {
     e.preventDefault();
     setLoading(true);
     
@@ -59,7 +147,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userProfile]);
 
   // Load next recommendation
   const loadNextRecommendation = async (userIdToUse = userId) => {
@@ -120,94 +208,6 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Profile form component with proper focus handling
-  const ProfileForm = () => {
-    return (
-      <div className="profile-form-container">
-        <div className="profile-form-card">
-          <h1 className="form-title">Discover Your Next Adventure</h1>
-          <p className="form-subtitle">Tell us about yourself and we'll suggest amazing experiences you never knew you'd love!</p>
-          
-          <form onSubmit={handleProfileSubmit} className="profile-form">
-            <div className="form-group">
-              <label htmlFor="age">Age</label>
-              <input
-                type="number"
-                id="age"
-                name="age"
-                value={userProfile.age}
-                onChange={(e) => handleInputChange('age', e.target.value)}
-                placeholder="Enter your age"
-                required
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="work_group">Work Group/Industry</label>
-              <input
-                type="text"
-                id="work_group"
-                name="work_group"
-                value={userProfile.work_group}
-                onChange={(e) => handleInputChange('work_group', e.target.value)}
-                placeholder="e.g., Technology, Finance, Healthcare"
-                required
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="work_role">Work Role</label>
-              <input
-                type="text"
-                id="work_role"
-                name="work_role"
-                value={userProfile.work_role}
-                onChange={(e) => handleInputChange('work_role', e.target.value)}
-                placeholder="e.g., Software Engineer, Product Manager"
-                required
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="work_resume">Work Experience Summary</label>
-              <textarea
-                id="work_resume"
-                name="work_resume"
-                value={userProfile.work_resume}
-                onChange={(e) => handleInputChange('work_resume', e.target.value)}
-                placeholder="Brief summary of your work experience and achievements"
-                rows="4"
-                required
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="hobbies_interests">Hobbies & Interests</label>
-              <textarea
-                id="hobbies_interests"
-                name="hobbies_interests"
-                value={userProfile.hobbies_interests}
-                onChange={(e) => handleInputChange('hobbies_interests', e.target.value)}
-                placeholder="What do you enjoy doing in your free time?"
-                rows="3"
-                required
-                autoComplete="off"
-              />
-            </div>
-
-            <button type="submit" className="submit-btn" disabled={loading}>
-              {loading ? 'Creating Profile...' : 'Discover Experiences'}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
   };
 
   // Recommendation card component
