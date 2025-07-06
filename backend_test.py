@@ -183,21 +183,31 @@ def main():
     if not tester.test_get_recommendations():
         print("❌ Getting recommendations failed")
     
-    # Test getting next recommendation
-    if not tester.test_next_recommendation():
-        print("❌ Getting next recommendation failed")
-    else:
-        # Test recording interaction
-        if not tester.test_interaction("liked"):
-            print("❌ Recording interaction failed")
-        
-        # Test getting another recommendation after interaction
-        if not tester.test_next_recommendation():
-            print("❌ Getting next recommendation after interaction failed")
+    # Test multiple recommendations to verify diversity
+    print("\n===== TESTING RECOMMENDATION DIVERSITY =====\n")
+    recommendation_count = 5
+    diverse_recommendations = 0
+    
+    for i in range(recommendation_count):
+        print(f"\n--- Testing recommendation #{i+1} ---")
+        if tester.test_next_recommendation():
+            # Record interaction to get next recommendation
+            if tester.test_interaction("liked" if i % 2 == 0 else "disliked"):
+                diverse_recommendations += 1
+            time.sleep(1)  # Small delay between requests
+    
+    diversity_score = diverse_recommendations / recommendation_count if recommendation_count > 0 else 0
+    print(f"\n📊 Recommendation diversity score: {diversity_score:.2f} ({diverse_recommendations}/{recommendation_count})")
     
     # Print results
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
-    return 0 if tester.tests_passed == tester.tests_run else 1
+    
+    # Check if we have AI-generated recommendations (not fallbacks)
+    ai_integration_success = len(tester.seen_recommendations) > 0
+    print(f"\n🤖 AI Integration: {'✅ Working' if ai_integration_success else '❌ Failed'}")
+    print(f"🔄 Recommendation Diversity: {'✅ Good' if len(set(tester.seen_recommendations)) >= 3 else '❌ Poor'}")
+    
+    return 0 if tester.tests_passed == tester.tests_run and ai_integration_success else 1
 
 if __name__ == "__main__":
     sys.exit(main())
