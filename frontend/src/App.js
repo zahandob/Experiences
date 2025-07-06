@@ -212,10 +212,16 @@ function App() {
         },
         body: JSON.stringify({
           age: parseInt(userProfile.age),
-          work_group: userProfile.work_group,
-          work_role: userProfile.work_role,
-          work_resume: userProfile.work_resume,
-          hobbies_interests: userProfile.hobbies_interests
+          industry_sector: userProfile.industry_sector,
+          current_role: userProfile.current_role,
+          technical_stack: userProfile.technical_stack,
+          career_trajectory: userProfile.career_trajectory,
+          educational_background: userProfile.educational_background,
+          leadership_experience: userProfile.leadership_experience,
+          external_activities: userProfile.external_activities,
+          investment_financial: userProfile.investment_financial,
+          serious_hobbies: userProfile.serious_hobbies,
+          network_connections: userProfile.network_connections
         }),
       });
 
