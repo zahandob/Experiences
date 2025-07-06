@@ -7,6 +7,10 @@ from typing import List, Optional, Dict, Any
 import openai
 from pymongo import MongoClient
 import json
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = FastAPI()
 
@@ -26,6 +30,8 @@ db = client.experience_recommender
 
 # OpenAI configuration
 openai.api_key = os.environ.get('OPENAI_API_KEY')
+print(f"OpenAI API Key loaded: {'✓' if openai.api_key else '✗'}")
+print(f"OpenAI API Key starts with: {openai.api_key[:20] if openai.api_key else 'None'}...")
 
 # Pydantic models
 class UserProfile(BaseModel):
@@ -102,11 +108,29 @@ mock_experiences = [
     {"id": "exp7", "title": "Circus Arts", "description": "Master aerial silks, trapeze, and juggling", "category": "Performance"},
     {"id": "exp8", "title": "Cheese Making", "description": "Create artisanal cheeses from scratch", "category": "Culinary"},
     {"id": "exp9", "title": "Glassblowing", "description": "Shape molten glass into art pieces", "category": "Arts & Crafts"},
-    {"id": "exp10", "title": "Falconry", "description": "Train and hunt with birds of prey", "category": "Animal Training"}
+    {"id": "exp10", "title": "Falconry", "description": "Train and hunt with birds of prey", "category": "Animal Training"},
+    {"id": "exp11", "title": "Archery", "description": "Master the ancient art of bow and arrow", "category": "Sports"},
+    {"id": "exp12", "title": "Soap Making", "description": "Create natural soaps with unique scents", "category": "Crafts"},
+    {"id": "exp13", "title": "Woodworking", "description": "Build furniture and decorative pieces", "category": "Crafts"},
+    {"id": "exp14", "title": "Meditation & Mindfulness", "description": "Learn techniques for mental clarity", "category": "Wellness"},
+    {"id": "exp15", "title": "Urban Gardening", "description": "Grow fresh produce in small spaces", "category": "Agriculture"}
 ]
 
-def get_ai_recommendations(user_profile: dict, similar_profiles: List[dict]) -> List[dict]:
+# Track shown recommendations per user
+user_shown_recommendations = {}
+
+def get_ai_recommendations(user_profile: dict, similar_profiles: List[dict], shown_ids: List[str] = []) -> List[dict]:
     """Use OpenAI to generate experience recommendations based on profile similarity analysis."""
+    
+    if not openai.api_key:
+        print("OpenAI API key not found, using fallback recommendations")
+        return generate_fallback_recommendations(shown_ids)
+    
+    # Filter out already shown experiences
+    available_experiences = [exp for exp in mock_experiences if exp['id'] not in shown_ids]
+    
+    if not available_experiences:
+        return []
     
     # Prepare the prompt for GPT-3.5-turbo
     prompt = f"""
@@ -122,15 +146,15 @@ Hobbies & Interests: {user_profile.get('hobbies_interests')}
 SIMILAR PROFILES FOUND:
 {json.dumps(similar_profiles, indent=2)}
 
-AVAILABLE EXPERIENCES:
-{json.dumps(mock_experiences, indent=2)}
+AVAILABLE EXPERIENCES (not yet shown):
+{json.dumps(available_experiences, indent=2)}
 
 TASK: Analyze the similar profiles and identify experiences that are:
 1. COMPLETELY UNRELATED to the user's current profile (different domain entirely)
 2. STATISTICALLY COMMON among people with similar profiles
 3. Would add the most DIVERSE dimension to their expertise
 
-Return a JSON array of exactly 3 recommendations with this structure:
+Return a JSON array of exactly 1 recommendation with this structure:
 [
   {{
     "id": "experience_id",
@@ -151,12 +175,13 @@ Focus on experiences that would unlock completely new expert domains while being
                 {"role": "system", "content": "You are an expert experience recommendation system that analyzes user profiles to suggest diverse, unrelated experiences that are statistically common among similar profiles."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=1000,
+            max_tokens=800,
             temperature=0.7
         )
         
         # Parse the AI response
         ai_response = response.choices[0].message.content
+        print(f"OpenAI response: {ai_response}")
         
         # Try to extract JSON from the response
         try:
@@ -167,21 +192,24 @@ Focus on experiences that would unlock completely new expert domains while being
             if start_idx != -1 and end_idx != -1:
                 json_str = ai_response[start_idx:end_idx]
                 recommendations = json.loads(json_str)
+                print(f"Parsed recommendations: {recommendations}")
                 return recommendations
             else:
-                # Fallback to mock recommendations if JSON parsing fails
-                return generate_fallback_recommendations()
+                print("Could not find JSON array in response, using fallback")
+                return generate_fallback_recommendations(shown_ids)
                 
-        except json.JSONDecodeError:
-            return generate_fallback_recommendations()
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {e}, using fallback")
+            return generate_fallback_recommendations(shown_ids)
             
     except Exception as e:
         print(f"OpenAI API Error: {str(e)}")
-        return generate_fallback_recommendations()
+        return generate_fallback_recommendations(shown_ids)
 
-def generate_fallback_recommendations():
+def generate_fallback_recommendations(shown_ids: List[str] = []):
     """Generate fallback recommendations when AI fails."""
-    return [
+    
+    fallback_recommendations = [
         {
             "id": "exp1",
             "title": "Pottery Making",
@@ -202,8 +230,30 @@ def generate_fallback_recommendations():
             "description": "Learn to identify and harvest wild mushrooms safely",
             "category": "Nature",
             "reasoning": "Detail-oriented professionals often find satisfaction in the methodical nature of foraging while connecting with nature."
+        },
+        {
+            "id": "exp2",
+            "title": "Salsa Dancing",
+            "description": "Master the passionate dance of salsa",
+            "category": "Dance",
+            "reasoning": "Physical expression through dance provides a perfect counterbalance to analytical work."
+        },
+        {
+            "id": "exp3",
+            "title": "Beekeeping",
+            "description": "Understand the fascinating world of bees",
+            "category": "Agriculture",
+            "reasoning": "Working with nature and understanding complex systems appeals to methodical thinkers."
         }
     ]
+    
+    # Filter out already shown recommendations
+    available_fallbacks = [rec for rec in fallback_recommendations if rec['id'] not in shown_ids]
+    
+    if available_fallbacks:
+        return [available_fallbacks[0]]  # Return one recommendation
+    else:
+        return []
 
 def find_similar_profiles(user_profile: dict) -> List[dict]:
     """Find profiles similar to the user's profile using simple matching."""
@@ -244,6 +294,9 @@ async def create_profile(profile: UserProfile):
         # Store in database
         db.profiles.insert_one(profile_data)
         
+        # Initialize shown recommendations for this user
+        user_shown_recommendations[user_id] = []
+        
         return {"user_id": user_id, "message": "Profile created successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -259,7 +312,8 @@ async def get_recommendations(user_id: str):
         similar_profiles = find_similar_profiles(user_profile)
         
         # Get AI recommendations
-        recommendations = get_ai_recommendations(user_profile, similar_profiles)
+        shown_ids = user_shown_recommendations.get(user_id, [])
+        recommendations = get_ai_recommendations(user_profile, similar_profiles, shown_ids)
         
         return {
             "user_profile": user_profile,
@@ -279,6 +333,11 @@ async def record_interaction(interaction: UserInteraction):
         # Store in database
         db.interactions.insert_one(interaction_data)
         
+        # Add to shown recommendations for this user
+        if interaction.user_id not in user_shown_recommendations:
+            user_shown_recommendations[interaction.user_id] = []
+        user_shown_recommendations[interaction.user_id].append(interaction.experience_id)
+        
         return {"message": "Interaction recorded successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -287,14 +346,15 @@ async def record_interaction(interaction: UserInteraction):
 async def get_next_recommendation(user_id: str):
     """Get the next recommendation for the user."""
     try:
-        # Get user profile and interactions
+        # Get user profile
         user_profile = mock_profiles[0]  # In real app, get from database
         
         # Find similar profiles
         similar_profiles = find_similar_profiles(user_profile)
         
-        # Get new recommendations (in real app, filter out already seen)
-        recommendations = get_ai_recommendations(user_profile, similar_profiles)
+        # Get new recommendations (filter out already seen)
+        shown_ids = user_shown_recommendations.get(user_id, [])
+        recommendations = get_ai_recommendations(user_profile, similar_profiles, shown_ids)
         
         # Return the first recommendation
         if recommendations:
